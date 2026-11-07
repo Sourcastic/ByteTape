@@ -1,0 +1,7 @@
+# Runtime error: a state ends without transition/halt. Expected exit code 4.
+%% tapes
+T: {1}
+%% states
+state S {
+    inc [T]
+}

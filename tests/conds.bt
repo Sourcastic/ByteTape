@@ -1,0 +1,16 @@
+# Conditions: and / or / not / parentheses, else-if chains, offsets, dead code after halt.
+%% tapes
+T: {5, 9, 'x'}
+Out: {}
+%% states
+state Start {
+    if [T] < [T + 1] and not [T] == 0 { printn [T] }
+    if [T] > [T + 1] or [T + 2] == 'x' { print [T + 2]  write [Out] 1 } else { write [Out] 2 }
+    if ([T] == 1 or [T + 1] == 9) and [T + 2] != 'y' { write [Out + 1] 7 }
+    if [T] == 1 { printn [T] } else if [T] == 5 { write [Out + 2] 55 printn [Out + 2] } else { printn [T + 1] }
+    move T R
+    if [T - 1] == 5 { printn [T - 1] }
+    transition End
+    printn [T]          # never runs
+}
+state End { halt }

@@ -23,6 +23,8 @@
 #include <stdint.h>
 #include "ast.h"
 #include "tape.h"
+#include "codegen.h"
+#include "interp.h"
 
 int  yylex(void);
 void yyerror(const char *msg);
@@ -194,6 +196,13 @@ static Stmt *make_on(Operand *cells, OnRow *rows)
 
 program
     : SEC_TAPES tape_decls SEC_STATES state_defs
+        {
+            /* Phase 2: the whole program has been parsed. If we are in compiler mode
+             * (main.c set codegen_out) and the program is free of errors, emit LLVM IR. */
+            if (codegen_out && parse_errors == 0
+                && start_state >= 0 && state_first_undefined() < 0)
+                codegen_emit(codegen_out);
+        }
     ;
 
 /* ---------- tapes ---------- */
@@ -210,7 +219,10 @@ tape_decl
             if (id < 0)
                 semantic_error("tape '%s' is declared twice", $1);
             else
+            {
                 tape_set_initial(id, init_buf, init_n);
+                cg_tape_init(id, init_buf, init_n);     /* remembered for code generation */
+            }
             init_n = 0;
             free($1);
         }

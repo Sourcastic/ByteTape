@@ -1,0 +1,12 @@
+# inc/dec wrap at 8 bits: 255+1 = 0 and 0-1 = 255.
+%% tapes
+A: {255}
+B: {0}
+%% states
+state S {
+    inc [A]
+    dec [B]
+    printn [A]
+    printn [B]
+    halt
+}
