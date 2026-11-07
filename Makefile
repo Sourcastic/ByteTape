@@ -2,10 +2,15 @@ CC     = gcc
 CFLAGS = -std=gnu17 -Wall -Wextra -g
 TARGET = bytetape
 
-SRCS   = parser.tab.c lex.yy.c ast.c interp.c tape.c main.c
-HDRS   = ast.h interp.h tape.h
+# The compiler / interpreter itself (Phase 1 + Phase 2 code generator)
+SRCS   = parser.tab.c lex.yy.c ast.c interp.c codegen.c tape.c main.c
+HDRS   = ast.h interp.h codegen.h tape.h
 
-all: $(TARGET)
+# The runtime that every compiled ByteTape program links against
+RTLIB  = libbtrt.a
+
+all: $(TARGET) $(RTLIB)
+	@chmod +x bytetapec tests/run_tests.sh
 
 $(TARGET): $(SRCS) $(HDRS)
 	$(CC) $(CFLAGS) -o $@ $(SRCS)
@@ -18,7 +23,22 @@ parser.tab.c parser.tab.h: parser.y
 lex.yy.c: lexer.l parser.tab.h
 	flex lexer.l
 
-clean:
-	rm -f $(TARGET) parser.tab.c parser.tab.h parser.output lex.yy.c
+# --- runtime library for compiled programs: tape.c + rt.c ---
+rt_tape.o: tape.c tape.h
+	$(CC) $(CFLAGS) -c tape.c -o $@
 
-.PHONY: all clean
+rt.o: rt.c tape.h
+	$(CC) $(CFLAGS) -c rt.c -o $@
+
+$(RTLIB): rt_tape.o rt.o
+	ar rcs $@ rt_tape.o rt.o
+
+# compare the interpreter with the compiler on every example
+test: all
+	sh tests/run_tests.sh
+
+clean:
+	rm -f $(TARGET) $(RTLIB) parser.tab.c parser.tab.h parser.output lex.yy.c *.o
+	rm -rf tests/out
+
+.PHONY: all test clean

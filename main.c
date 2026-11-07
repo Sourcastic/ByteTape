@@ -10,6 +10,7 @@
 #include <string.h>
 
 #include "ast.h"
+#include "codegen.h"
 #include "interp.h"
 
 extern FILE *yyin;
@@ -23,6 +24,7 @@ static void usage(const char *prog)
             "  -q               quiet: do not print the final tapes when the program stops\n"
             "  --trace          print the state and every tape before each step\n"
             "  --max-steps N    stop with an error after N steps (catches endless loops)\n"
+            "  --emit-ll FILE   do not run: compile to LLVM IR and write it to FILE ('-' = stdout)\n"
             "  -h, --help       show this message\n"
             "\n"
             "exit codes: 0 halt/accept, 1 reject, 2 usage, 3 compile error, 4 runtime error\n",
@@ -33,6 +35,7 @@ int main(int argc, char **argv)
 {
     RunOptions  opts = { 1, 0, 0 };
     const char *path = NULL;
+    const char *ll_path = NULL;        /* --emit-ll target: compiler mode when non-NULL */
 
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "-q") == 0) {
@@ -47,6 +50,9 @@ int main(int argc, char **argv)
                 fprintf(stderr, "--max-steps needs a positive number\n");
                 return EXIT_USAGE;
             }
+        } else if (strcmp(argv[i], "--emit-ll") == 0) {
+            if (++i >= argc) { usage(argv[0]); return EXIT_USAGE; }
+            ll_path = argv[i];
         } else if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
             usage(argv[0]);
             return EXIT_OK;
@@ -68,7 +74,17 @@ int main(int argc, char **argv)
         return EXIT_USAGE;
     }
 
-    /* 1. parse: builds tapes, the state table and the AST */
+       /* compiler mode: the grammar will write LLVM IR to this file when parsing succeeds */
+    if (ll_path) {
+        codegen_out = strcmp(ll_path, "-") == 0 ? stdout : fopen(ll_path, "w");
+        if (!codegen_out) {
+            perror(ll_path);
+            fclose(yyin);
+            return EXIT_USAGE;
+        }
+    }
+
+    /* 1. parse: builds tapes, the state table and the AST (and, in compiler mode, the IR) */
     int syntax_failed = yyparse();
     fclose(yyin);
 
@@ -85,10 +101,23 @@ int main(int argc, char **argv)
         }
     }
     if (syntax_failed || parse_errors > 0) {
-        fprintf(stderr, "%s: not run (errors found)\n", path);
+        if (ll_path && codegen_out != stdout) {
+            fclose(codegen_out);
+            remove(ll_path);                       /* do not leave a half-made file behind */
+        }
+        fprintf(stderr, "%s: %s (errors found)\n", path, ll_path ? "not compiled" : "not run");
         return EXIT_COMPILE;
     }
 
-    /* 3. run */
+    /* 3a. compiler mode: the IR has been written; nothing is run */
+    if (ll_path) {
+        if (fflush(codegen_out) != 0 || (codegen_out != stdout && fclose(codegen_out) != 0)) {
+            perror(ll_path);
+            return EXIT_USAGE;
+        }
+        return EXIT_OK;
+    }
+
+    /* 3b. interpreter mode: run */
     return run_program(&opts);
 }

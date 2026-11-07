@@ -1,0 +1,10 @@
+# Runtime error: no row of `on` matches. Expected exit code 4.
+%% tapes
+T: {7}
+%% states
+state S {
+    on [T] {
+        1 -> { halt }
+        2 -> { halt }
+    }
+}

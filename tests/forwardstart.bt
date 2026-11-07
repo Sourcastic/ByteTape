@@ -1,0 +1,13 @@
+# `start state` that is not first; empty `else`; unconditional * row; nested on.
+%% tapes
+A: {1, 2}
+B: {}
+%% states
+state Never { reject }
+start state Go {
+    on [A], [A + 1] {
+        1, 2 -> { on [A] { 1 -> { write [B] 'k' print [B] }  * -> { reject } }  transition Done }
+        *, * -> { reject }
+    }
+}
+state Done { accept }

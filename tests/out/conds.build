@@ -1,0 +1,1 @@
+compiled tests/conds.bt -> tests/out/conds  (LLVM IR kept in tests/out/conds.ll)

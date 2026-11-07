@@ -1,0 +1,1 @@
+compiled examples/palindrome.bt -> tests/out/palindrome  (LLVM IR kept in tests/out/palindrome.ll)

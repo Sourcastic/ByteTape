@@ -1,0 +1,1 @@
+compiled examples/hello.bt -> tests/out/hello  (LLVM IR kept in tests/out/hello.ll)

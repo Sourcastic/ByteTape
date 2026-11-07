@@ -1,0 +1,1 @@
+compiled examples/sorter.bt -> tests/out/sorter  (LLVM IR kept in tests/out/sorter.ll)

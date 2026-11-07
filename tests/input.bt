@@ -1,0 +1,11 @@
+# Reads stdin until end of input and echoes it uppercased-by-minus-32 for a..z.
+%% tapes
+Buf: {}
+%% states
+state Loop {
+    input [Buf]
+    on [Buf] {
+        _ -> { halt }
+        * -> { if [Buf] >= 'a' and [Buf] <= 'z' { write [Buf] [Buf] dec [Buf] }  transition Loop }
+    }
+}
