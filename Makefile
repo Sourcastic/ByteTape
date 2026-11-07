@@ -24,11 +24,17 @@ lex.yy.c: lexer.l parser.tab.h
 	flex lexer.l
 
 # --- runtime library for compiled programs: tape.c + rt.c ---
+# rt_tape.o: tape.c tape.h
+# 	$(CC) $(CFLAGS) -c tape.c -o $@
+
+# rt.o: rt.c tape.h
+# 	$(CC) $(CFLAGS) -c rt.c -o $@
+
 rt_tape.o: tape.c tape.h
-	$(CC) $(CFLAGS) -c tape.c -o $@
+	$(CC) $(CFLAGS) -fPIC -c tape.c -o $@
 
 rt.o: rt.c tape.h
-	$(CC) $(CFLAGS) -c rt.c -o $@
+	$(CC) $(CFLAGS) -fPIC -c rt.c -o $@
 
 $(RTLIB): rt_tape.o rt.o
 	ar rcs $@ rt_tape.o rt.o
