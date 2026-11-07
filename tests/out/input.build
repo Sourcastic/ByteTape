@@ -1,1 +1,0 @@
-compiled tests/input.bt -> tests/out/input  (LLVM IR kept in tests/out/input.ll)

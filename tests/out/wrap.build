@@ -1,1 +1,0 @@
-compiled tests/wrap.bt -> tests/out/wrap  (LLVM IR kept in tests/out/wrap.ll)

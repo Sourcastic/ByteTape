@@ -1,1 +1,0 @@
-compiled tests/noend.bt -> tests/out/noend  (LLVM IR kept in tests/out/noend.ll)

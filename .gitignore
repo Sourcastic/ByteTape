@@ -1,0 +1,16 @@
+# Executables
+bytetape
+bytetapec
+
+# Object and library files
+*.o
+*.a
+
+# Generated parser/lexer files
+lex.yy.c
+parser.tab.c
+parser.tab.h
+parser.output
+
+# Generated test outputs
+tests/out/*

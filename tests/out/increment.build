@@ -1,1 +1,0 @@
-compiled examples/increment.bt -> tests/out/increment  (LLVM IR kept in tests/out/increment.ll)

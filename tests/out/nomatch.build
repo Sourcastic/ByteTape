@@ -1,1 +1,0 @@
-compiled tests/nomatch.bt -> tests/out/nomatch  (LLVM IR kept in tests/out/nomatch.ll)

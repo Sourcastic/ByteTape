@@ -1,4 +1,0 @@
-%% tapes
-T: {1}
-%% states
-state S { move Nope R  transition Missing }

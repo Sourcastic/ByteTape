@@ -1,1 +1,0 @@
-compiled examples/cat.bt -> tests/out/cat  (LLVM IR kept in tests/out/cat.ll)
