@@ -1,0 +1,13 @@
+# Adds 1 to a binary number stored least-significant bit first.
+# 1101 (LSB first) is 11, so the result is 12 = 0011 (LSB first).
+
+%% tapes
+Bits: {1, 1, 0, 1}
+
+%% states
+state Inc {
+    on [Bits] {
+        _ -> { write [Bits] 1  halt }                      # blank: the tape grows by itself
+        1 -> { write [Bits] 0  move Bits R  transition Inc }   # 1 + 1 = 0, carry on
+    }
+}

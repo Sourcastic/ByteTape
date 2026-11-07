@@ -1,0 +1,11 @@
+# A machine that never stops. Try:  ./bytetape --max-steps 1000 examples/forever.bt
+
+%% tapes
+T: {}
+
+%% states
+state Spin {
+    inc [T]
+    move T R
+    transition Spin
+}

@@ -1,0 +1,14 @@
+# Copies standard input to standard output.
+#   echo hello | ./bytetape -q examples/cat.bt
+
+%% tapes
+Buf: {}
+
+%% states
+state Loop {
+    input [Buf]                      # end of input stores 0 (blank)
+    on [Buf] {
+        _ -> { halt }
+        * -> { print [Buf]  transition Loop }
+    }
+}

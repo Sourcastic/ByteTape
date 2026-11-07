@@ -1,0 +1,39 @@
+# Sorts every pair of neighbouring values from Input into Output.
+# (The example from the project proposal.)
+
+%% tapes
+Input:        {3, 2, 4, 5, 1, '$'}
+Calculations: {}
+Output:       {}
+
+%% states
+state ReadFirstByte {
+    on [Input] {
+        '$' -> { write [Output] '$'  halt }
+        *   -> { write [Output] [Input]
+                 move Input R
+                 move Output R
+                 transition ReadSecondByte }
+    }
+}
+
+state ReadSecondByte {
+    on [Input] {
+        '$' -> { write [Output] '$'  halt }
+        *   -> { write [Output] [Input]
+                 move Input R
+                 move Output L
+                 transition CompareAndSort }
+    }
+}
+
+state CompareAndSort {
+    if [Output] > [Output + 1] {
+        write [Calculations] [Output]
+        write [Output] [Output + 1]
+        write [Output + 1] [Calculations]
+    }
+    move Output R
+    move Output R
+    transition ReadFirstByte
+}

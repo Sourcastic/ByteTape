@@ -1,0 +1,12 @@
+# Prints a message. The message is data on a tape; the machine walks along it.
+
+%% tapes
+Msg: {'H', 'e', 'l', 'l', 'o', '!', '\n'}
+
+%% states
+state Print {
+    on [Msg] {
+        _ -> { halt }
+        * -> { print [Msg]  move Msg R  transition Print }
+    }
+}

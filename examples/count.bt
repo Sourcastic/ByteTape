@@ -1,0 +1,12 @@
+# Counts down from 5 and prints each value.
+
+%% tapes
+Counter: {5}
+
+%% states
+state Loop {
+    on [Counter] {
+        _ -> { halt }
+        * -> { printn [Counter]  dec [Counter]  transition Loop }
+    }
+}
