@@ -1,0 +1,15 @@
+# Alphabet with the blank as a pattern, offsets, comparisons and inc inside Gamma.
+%% alphabet
+input: {'a', 'b'}
+tape:  {'c', 'a'}          # 'a' repeated on purpose: allowed (already an input symbol)
+%% tapes
+T: {'a', 'b'}
+Out: {}
+%% states
+state S {
+    inc [T]                         # 'a' -> 'b'
+    if [T] == [T + 1] { write [Out] 'c' } else { write [Out] 'a' }
+    print [Out]
+    dec [Out]                       # 'c' -> 'b' (both tape symbols)
+    halt
+}

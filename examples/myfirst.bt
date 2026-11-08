@@ -1,0 +1,11 @@
+# My first program: adds 1 to every number on the tape and prints it.
+%% tapes
+Data: {3, 1, 2}
+
+%% states
+state Start {
+    on [Data] {
+        _ -> { halt }
+        * -> { inc [Data]  printn [Data]  move Data R  transition Start }
+    }
+}

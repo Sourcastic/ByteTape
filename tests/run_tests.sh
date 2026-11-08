@@ -30,11 +30,24 @@ run_one() {   # $1 = program   $2 = stdin text (may be empty)
 for f in examples/*.bt tests/*.bt; do
     case $f in
         examples/forever.bt) continue ;;                # never halts
+        tests/fail_*.bt) continue ;;                    # must NOT compile: checked below
+        tests/alpha_input.bt) run_one "$f" "abz" ;;     # 'z' is outside the alphabet
         examples/cat.bt|tests/input.bt) run_one "$f" "Hello, tapes!
 second line
 " ;;
         *) run_one "$f" "" ;;
     esac
+done
+
+# programs that must be rejected at compile time (exit code 3) by BOTH the interpreter and the compiler
+for f in tests/fail_*.bt; do
+    ./bytetape -q "$f" >/dev/null 2>&1; ri=$?
+    ./bytetapec "$f" -o tests/out/failed >/dev/null 2>&1; rc=$?
+    if [ $ri -eq 3 ] && [ $rc -eq 3 ] && [ ! -e tests/out/failed.ll ]; then
+        echo "ok    $f   (compile error, exit 3)"; pass=$((pass+1))
+    else
+        echo "FAIL  $f   interpreter exit=$ri  compiler exit=$rc  (both should be 3)"; fail=$((fail+1))
+    fi
 done
 
 # compile errors must be reported by the compiler too (exit code 3, no output file)

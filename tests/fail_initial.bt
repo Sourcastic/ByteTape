@@ -1,0 +1,8 @@
+# Compile error: 'X' is a work symbol, so it cannot be part of the initial input.
+%% alphabet
+input: {'a', 'b'}
+tape:  {'X'}
+%% tapes
+T: {'a', 'X'}
+%% states
+state S { halt }

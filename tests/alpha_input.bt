@@ -1,0 +1,14 @@
+# Echoes input but only 'a' and 'b' (and the blank at end of input) are tape symbols.
+# Fed "abz" it must stop with a runtime error on the 'z'.
+%% alphabet
+input: {'a', 'b'}
+%% tapes
+Buf: {}
+%% states
+state Loop {
+    input [Buf]
+    on [Buf] {
+        _ -> { halt }
+        * -> { print [Buf]  transition Loop }
+    }
+}

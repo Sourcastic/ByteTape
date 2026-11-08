@@ -44,7 +44,33 @@ void rt_init(int argc, char **argv)
         }
     }
 }
+/* ---------- alphabet (only present when the program has a `%% alphabet` section) ---------- */
 
+/* Called once from the generated main(): the tape alphabet Gamma, as a list of symbols. */
+void rt_alphabet(const uint8_t *symbols, int n)
+{
+    tape_alphabet_enable();
+
+    for (int i = 0; i < n; i++)
+        tape_alphabet_add(symbols[i], 0);
+}
+
+/* Called after inc / dec / input when an alphabet is declared. */
+void rt_check_symbol(int line, int value)
+{
+    if (tape_in_tape_alphabet(value))
+        return;
+
+    char name[24];
+    tape_symbol_name(value, name, sizeof name);
+
+    fflush(stdout);
+    fprintf(stderr,
+            "runtime error (line %d): symbol %s is not in the tape alphabet\n",
+            line, name);
+
+    exit(RT_EXIT_RUNTIME);
+}
 /* ---------- tape access (thin wrappers around tape.c) ---------- */
 
 int rt_read(int tape, long offset)

@@ -5,6 +5,10 @@
  * Program shape:
  *
  *      # comment
+ *      %% alphabet                         (optional: declare the symbols)
+ *      input: {'a', 'b'}                  input symbols  (Sigma)
+ *      tape:  {'X', 'Y'}                  extra work symbols; Gamma = Sigma + these + blank
+ *
  *      %% tapes
  *      Name: {1, 2, 'x', _}               tape declarations
  *
@@ -21,6 +25,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <string.h>
 #include "ast.h"
 #include "tape.h"
 #include "codegen.h"
@@ -90,6 +95,20 @@ static int check_lit(int v)
     return v;
 }
 
+/* A literal used as a symbol (written to a tape, compared, or matched in an `on` row).
+ * When an alphabet is declared it must be one of the tape symbols. */
+static int check_sym(int v)
+{
+    v = check_lit(v);
+    if (tape_alphabet_active() && !tape_in_tape_alphabet(v)) {
+        char nm[24];
+        tape_symbol_name(v, nm, sizeof nm);
+        semantic_error("symbol %s is not in the alphabet (declare it under 'input:' or 'tape:' "
+                       "in '%%%% alphabet')", nm);
+    }
+    return v;
+}
+
 /* Statements that take just a cell target (inc, dec, print, printn, input). */
 static Stmt *cell_stmt(Stmt *(*make)(int, long), Operand *cell)
 {
@@ -111,6 +130,45 @@ static void init_push(int v)
     }
     init_buf[init_n++] = (uint8_t)check_lit(v);
 }
+
+/* The initial contents of a tape are input, so they must be input symbols (Sigma). */
+static void check_initial_symbols(const char *tape_name)
+{
+    for (int i = 0; i < init_n; i++) {
+        int v = init_buf[i];
+        if (tape_in_input_alphabet(v))
+            continue;
+        char nm[24];
+        tape_symbol_name(v, nm, sizeof nm);
+        if (v == 0)
+            semantic_error("tape '%s': the blank cannot be part of the initial input", tape_name);
+        else
+            semantic_error("tape '%s': initial symbol %s is not an input symbol "
+                           "(declare it under 'input:' in '%%%% alphabet')", tape_name, nm);
+    }
+}
+
+/* One line of the alphabet section: the symbols are waiting in init_buf. */
+static void alphabet_decl(int is_input)
+{
+    for (int i = 0; i < init_n; i++) {
+        int v = init_buf[i];
+        char nm[24];
+        tape_symbol_name(v, nm, sizeof nm);
+        if (is_input && v == 0) {
+            semantic_error("the blank cannot be an input symbol");
+            continue;
+        }
+        if (is_input && tape_in_input_alphabet(v))
+            warning_at(yylineno, "input symbol %s is listed twice", nm);
+        else if (!is_input && v != 0 && tape_in_tape_alphabet(v) && !tape_in_input_alphabet(v))
+            warning_at(yylineno, "tape symbol %s is listed twice", nm);
+        tape_alphabet_add(v, is_input);
+    }
+    init_n = 0;
+}
+
+static int seen_input_decl = 0, seen_tape_decl = 0;
 
 static void define_state(char *name, Stmt *body, int is_start)
 {
@@ -175,6 +233,7 @@ static Stmt *make_on(Operand *cells, OnRow *rows)
 %token <str> IDENT
 %token SEC_TAPES   "%% tapes"
 %token SEC_STATES  "%% states"
+%token SEC_ALPHABET "%% alphabet"
 %token BAD_SECTION "bad section marker"
 %token STATE START TRANSITION HALT KW_ACCEPT KW_REJECT WRITE MOVE INC DEC
 %token IF ELSE ON AND OR NOT PRINT PRINTN INPUT LEFT RIGHT ARROW
@@ -195,13 +254,45 @@ static Stmt *make_on(Operand *cells, OnRow *rows)
 %%
 
 program
-    : SEC_TAPES tape_decls SEC_STATES state_defs
+    : header SEC_TAPES tape_decls SEC_STATES state_defs
         {
             /* Phase 2: the whole program has been parsed. If we are in compiler mode
              * (main.c set codegen_out) and the program is free of errors, emit LLVM IR. */
             if (codegen_out && parse_errors == 0
                 && start_state >= 0 && state_first_undefined() < 0)
                 codegen_emit(codegen_out);
+        }
+    ;
+
+/* ---------- alphabet (optional header) ---------- */
+
+header
+    : /* empty: no alphabet, every value 0-255 is allowed */
+    | SEC_ALPHABET { tape_alphabet_enable(); } alpha_decls
+    ;
+
+alpha_decls
+    : /* empty */
+    | alpha_decls alpha_decl
+    ;
+
+alpha_decl
+    : INPUT ':' '{' init_list_opt '}'
+        {
+            if (seen_input_decl++)
+                semantic_error("'input:' is declared twice in '%%%% alphabet'");
+            alphabet_decl(1);
+        }
+    | IDENT ':' '{' init_list_opt '}'
+        {
+            if (strcmp($1, "tape") != 0)
+                semantic_error("'%%%% alphabet' only knows 'input:' and 'tape:', not '%s:'", $1);
+            else if (seen_tape_decl++)
+                semantic_error("'tape:' is declared twice in '%%%% alphabet'");
+            else
+                alphabet_decl(0);
+            init_n = 0;
+            free($1);
         }
     ;
 
@@ -220,6 +311,8 @@ tape_decl
                 semantic_error("tape '%s' is declared twice", $1);
             else
             {
+                if (tape_alphabet_active())
+                    check_initial_symbols(tape_name(id));
                 tape_set_initial(id, init_buf, init_n);
                 cg_tape_init(id, init_buf, init_n);     /* remembered for code generation */
             }
@@ -314,7 +407,7 @@ pattern_list
     ;
 
 pattern
-    : NUMBER                            { $$ = pattern_value(check_lit($1)); }
+    : NUMBER                            { $$ = pattern_value(check_sym($1)); }
     | '*'                               { $$ = pattern_any(); }
     ;
 
@@ -328,7 +421,7 @@ cell_ref
     ;
 
 operand
-    : NUMBER                    { $$ = operand_lit(check_lit($1)); }
+    : NUMBER                    { $$ = operand_lit(check_sym($1)); }
     | cell_ref                  { $$ = $1; }
     ;
 

@@ -1,0 +1,11 @@
+# inc turns 'b' into 'c', which is not in the declared alphabet: runtime error, exit code 4.
+%% alphabet
+input: {'a', 'b'}
+%% tapes
+T: {'a'}
+%% states
+state S {
+    inc [T]          # 'a' -> 'b'   fine
+    inc [T]          # 'b' -> 'c'   not a tape symbol
+    halt
+}

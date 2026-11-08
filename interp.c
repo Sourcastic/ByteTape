@@ -34,7 +34,17 @@ static void runtime_error(int line, const char *fmt, ...)
     fputc('\n', stderr);
     exit(EXIT_RUNTIME);
 }
+/* With a declared alphabet, every symbol that lands on a tape must be a tape symbol.
+ * Literals are checked at compile time; values made by inc / dec / input are checked here. */
+static void check_symbol(int line, int value)
+{
+    if (!tape_alphabet_active() || tape_in_tape_alphabet(value))
+        return;
 
+    char name[24];
+    tape_symbol_name(value, name, sizeof name);
+    runtime_error(line, "symbol %s is not in the tape alphabet", name);
+}
 /* ---------- operands and conditions ---------- */
 
 static int operand_value(const Operand *o)
@@ -101,13 +111,19 @@ static Flow exec_block(const Stmt *s, int *next_state)
             tape_move(s->tape, s->dir);
             break;
 
-        case STMT_INC:   /* int -> uint8_t conversion wraps modulo 256 */
-            tape_write(s->tape, s->offset, (uint8_t)(tape_read(s->tape, s->offset) + 1));
+        case STMT_INC: {
+            uint8_t nv = (uint8_t)(tape_read(s->tape, s->offset) + 1);
+            check_symbol(s->line, nv);
+            tape_write(s->tape, s->offset, nv);
             break;
+        }
 
-        case STMT_DEC:
-            tape_write(s->tape, s->offset, (uint8_t)(tape_read(s->tape, s->offset) - 1));
+        case STMT_DEC: {
+            uint8_t nv = (uint8_t)(tape_read(s->tape, s->offset) - 1);
+            check_symbol(s->line, nv);
+            tape_write(s->tape, s->offset, nv);
             break;
+        }
 
         case STMT_IF: {
             const Stmt *branch = eval_cond(s->cond) ? s->then_body : s->else_body;
@@ -169,10 +185,12 @@ static Flow exec_block(const Stmt *s, int *next_state)
             break;
 
         case STMT_INPUT: {
-            int c = getchar();
-            tape_write(s->tape, s->offset, (uint8_t)(c == EOF ? 0 : c));
-            break;
-        }
+                int c = getchar();
+                uint8_t nv = (uint8_t)(c == EOF ? 0 : c);
+                check_symbol(s->line, nv);
+                tape_write(s->tape, s->offset, nv);
+                break;
+            }
         }
     }
     return FLOW_NEXT;

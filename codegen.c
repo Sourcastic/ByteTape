@@ -246,6 +246,13 @@ static void describe_cell(char *buf, size_t n, const Operand *c)
                  c->offset < 0 ? -c->offset : c->offset);
 }
 
+/* With a declared alphabet, check a freshly made symbol before it is stored. */
+static void emit_symbol_check(int line, int tmp)
+{
+    if (tape_alphabet_active())
+        fprintf(out, "  call void @rt_check_symbol(i32 %d, i32 %%t%d)\n", line, tmp);
+}
+
 /* inc / dec: read, do the arithmetic on a real i8 so it wraps, write back. */
 static void emit_incdec(const Stmt *s, const char *op)
 {
@@ -254,6 +261,7 @@ static void emit_incdec(const Stmt *s, const char *op)
     fprintf(out, "  %%t%d = trunc i32 %%t%d to i8\n", b, a);
     fprintf(out, "  %%t%d = %s i8 %%t%d, 1\n", c, op, b);
     fprintf(out, "  %%t%d = zext i8 %%t%d to i32\n", d, c);
+    emit_symbol_check(s->line, d);
     fprintf(out, "  call void @rt_write(i32 %d, i64 %ld, i32 %%t%d)\n", s->tape, s->offset, d);
 }
 
@@ -415,6 +423,7 @@ static void stmt(const Stmt *s)
     case STMT_INPUT: {
         int t = new_tmp();
         fprintf(out, "  %%t%d = call i32 @rt_input()\n", t);
+        emit_symbol_check(s->line, t);
         fprintf(out, "  call void @rt_write(i32 %d, i64 %ld, i32 %%t%d)\n", s->tape, s->offset, t);
         break;
     }
@@ -439,6 +448,8 @@ static void emit_prologue(void)
           "declare i32  @tape_declare(ptr)\n"
           "declare void @tape_set_initial(i32, ptr, i32)\n"
           "declare void @rt_init(i32, ptr)\n"
+          "declare void @rt_alphabet(ptr, i32)\n"
+          "declare void @rt_check_symbol(i32, i32)\n"
           "declare i32  @rt_read(i32, i64)\n"
           "declare void @rt_write(i32, i64, i32)\n"
           "declare void @rt_move(i32, i32)\n"
@@ -464,6 +475,12 @@ static void emit_main(void)
         if (g_init_n[i] > 0)
             fprintf(out, "  call void @tape_set_initial(i32 %d, ptr @.tinit.%d, i32 %d)\n",
                     i, i, g_init_n[i]);
+    }
+    if (tape_alphabet_active()) {            /* hand the tape alphabet to the runtime */
+        int n = 0;
+        for (int v = 0; v < 256; v++)
+            n += tape_in_tape_alphabet(v);
+        fprintf(out, "  call void @rt_alphabet(ptr @.alpha, i32 %d)\n", n);
     }
     br_named("S_%s", states[start_state].name);
 
@@ -507,6 +524,16 @@ static void emit_constants(void)
             print_c_string(out, g_init[i], (size_t)g_init_n[i], 0);
             fputc('\n', out);
         }
+    }
+    if (tape_alphabet_active()) {            /* the tape alphabet Gamma, one byte per symbol */
+        uint8_t syms[256];
+        int n = 0;
+        for (int v = 0; v < 256; v++)
+            if (tape_in_tape_alphabet(v))
+                syms[n++] = (uint8_t)v;
+        fprintf(out, "@.alpha = private constant [%d x i8] ", n);
+        print_c_string(out, syms, (size_t)n, 0);
+        fputc('\n', out);
     }
     for (int i = 0; i < g_nstrs; i++) {
         size_t len = strlen(g_strs[i]);

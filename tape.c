@@ -181,3 +181,55 @@ void tape_dump(FILE *out, const char *indent)
         fprintf(out, "\n");
     }
 }
+
+/* ---------- alphabet (see tape.h) ---------- */
+
+#define SYM_GAMMA 1
+#define SYM_SIGMA 2
+
+static uint8_t sym_flags[256];
+static int alphabet_on = 0;
+
+void tape_alphabet_enable(void)
+{
+    alphabet_on = 1;
+    sym_flags[0] |= SYM_GAMMA;
+}
+
+int tape_alphabet_active(void)
+{
+    return alphabet_on;
+}
+
+void tape_alphabet_add(int sym, int is_input)
+{
+    if (sym < 0 || sym > 255)
+        return;
+
+    sym_flags[sym] |= SYM_GAMMA;
+
+    if (is_input)
+        sym_flags[sym] |= SYM_SIGMA;
+}
+
+int tape_in_input_alphabet(int sym)
+{
+    return !alphabet_on ||
+           (sym >= 0 && sym <= 255 && (sym_flags[sym] & SYM_SIGMA));
+}
+
+int tape_in_tape_alphabet(int sym)
+{
+    return !alphabet_on ||
+           (sym >= 0 && sym <= 255 && (sym_flags[sym] & SYM_GAMMA));
+}
+
+void tape_symbol_name(int sym, char *buf, size_t n)
+{
+    if (sym == 0)
+        snprintf(buf, n, "_ (blank)");
+    else if (sym >= 32 && sym < 127)
+        snprintf(buf, n, "'%c' (%d)", sym, sym);
+    else
+        snprintf(buf, n, "%d", sym);
+}

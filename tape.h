@@ -45,6 +45,16 @@ uint8_t     tape_read (int id, long offset);
 void        tape_write(int id, long offset, uint8_t value);
 void        tape_move (int id, int dir);      /* dir: -1 = left, +1 = right */
 
+/* ---- alphabet (optional; declared in the %% alphabet section) ---- */
+
+void        tape_alphabet_enable(void);
+int         tape_alphabet_active(void);
+void        tape_alphabet_add(int sym, int is_input);
+int         tape_in_input_alphabet(int sym);
+int         tape_in_tape_alphabet(int sym);
+
+void        tape_symbol_name(int sym, char *buf, size_t n);
+
 /* ---- debugging / output ---- */
 
 /* Print every tape on its own line, names aligned, each line starting with `indent`:

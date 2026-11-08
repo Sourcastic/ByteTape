@@ -1,0 +1,55 @@
+# Decides the language  a^n b^n  (n a's followed by exactly n b's) -- a classic Turing machine.
+#
+# Strategy: cross off the leftmost 'a' (write X), then cross off the first 'b' after it
+# (write Y), go back, and repeat. At the end only X's and Y's may remain.
+#
+# The alphabet is declared in the header:
+#   input symbols  Sigma = {a, b}          what the input may contain
+#   work symbols         = {X, Y}          extra symbols the machine uses only while working
+#   tape alphabet  Gamma = {a, b, X, Y, blank}
+# Using any other symbol (say 'Z') is a compile error. Change the word below to try others.
+
+%% alphabet
+input: {'a', 'b'}
+tape:  {'X', 'Y'}
+
+%% tapes
+T: {'a', 'a', 'b', 'b'}
+
+%% states
+# At the left end of the unchecked part: take the next 'a'.
+state Start {
+    on [T] {
+        'a' -> { write [T] 'X'  move T R  transition FindB }
+        'Y' -> { transition CheckY }          # no 'a' left: only Y's may remain
+        _   -> { accept }                     # the empty word is a^0 b^0
+        *   -> { reject }                     # a 'b' came before its 'a'
+    }
+}
+
+# Walk right over a's and Y's to the first unmatched 'b' and cross it off.
+state FindB {
+    on [T] {
+        'a' -> { move T R  transition FindB }
+        'Y' -> { move T R  transition FindB }
+        'b' -> { write [T] 'Y'  move T L  transition Back }
+        *   -> { reject }                     # ran out of b's: too many a's
+    }
+}
+
+# Walk left to the last X, then step right to the next unchecked symbol.
+state Back {
+    on [T] {
+        'X' -> { move T R  transition Start }
+        *   -> { move T L  transition Back }
+    }
+}
+
+# Everything left must be Y's up to the blank.
+state CheckY {
+    on [T] {
+        'Y' -> { move T R  transition CheckY }
+        _   -> { accept }
+        *   -> { reject }                     # a leftover 'b': too many b's
+    }
+}

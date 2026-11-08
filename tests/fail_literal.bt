@@ -1,0 +1,7 @@
+# Compile error: 'Z' is not in the alphabet.
+%% alphabet
+input: {'a', 'b'}
+%% tapes
+T: {'a'}
+%% states
+state S { write [T] 'Z'  halt }

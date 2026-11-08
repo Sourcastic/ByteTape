@@ -1,0 +1,7 @@
+# Compile error: an `on` row matches a symbol that is not in the alphabet.
+%% alphabet
+input: {'a', 'b'}
+%% tapes
+T: {'a'}
+%% states
+state S { on [T] { 'a' -> { halt }  'q' -> { halt }  * -> { reject } } }

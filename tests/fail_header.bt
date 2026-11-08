@@ -1,0 +1,7 @@
+# Compile error: only 'input:' and 'tape:' exist in the alphabet section.
+%% alphabet
+symbols: {'a'}
+%% tapes
+T: {'a'}
+%% states
+state S { halt }

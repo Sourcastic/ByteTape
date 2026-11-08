@@ -1,0 +1,11 @@
+# Same machine as examples/anbn.bt on a word that is NOT a^n b^n (two a's, three b's).
+%% alphabet
+input: {'a', 'b'}
+tape:  {'X', 'Y'}
+%% tapes
+T: {'a', 'a', 'b', 'b', 'b'}
+%% states
+state Start { on [T] { 'a' -> { write [T] 'X' move T R transition FindB }  'Y' -> { transition CheckY }  _ -> { accept }  * -> { reject } } }
+state FindB { on [T] { 'a' -> { move T R transition FindB }  'Y' -> { move T R transition FindB }  'b' -> { write [T] 'Y' move T L transition Back }  * -> { reject } } }
+state Back  { on [T] { 'X' -> { move T R transition Start }  * -> { move T L transition Back } } }
+state CheckY { on [T] { 'Y' -> { move T R transition CheckY }  _ -> { accept }  * -> { reject } } }

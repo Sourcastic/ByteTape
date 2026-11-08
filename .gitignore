@@ -1,9 +1,8 @@
-# Executables
-bytetape
-
 # Object and library files
 *.o
 *.a
+*.ll
+
 
 # Generated parser/lexer files
 lex.yy.c

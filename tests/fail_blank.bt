@@ -1,0 +1,7 @@
+# Compile error: the blank can never be an input symbol.
+%% alphabet
+input: {'a', _}
+%% tapes
+T: {'a'}
+%% states
+state S { halt }
