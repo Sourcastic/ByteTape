@@ -1,0 +1,60 @@
+#!/bin/sh
+# bytetapec -- the ByteTape ahead-of-time compiler driver (Phase 2).
+#
+#   ./bytetapec program.bt              ->  ./program      (and program.ll)
+#   ./bytetapec program.bt -o name      ->  ./name         (and name.ll)
+#   ./bytetapec -S program.bt           ->  program.ll only (stop after LLVM IR)
+#   ./bytetapec -O0 program.bt          ->  no optimisation (default is -O2)
+#
+# Pipeline:   program.bt --(bytetape --emit-ll: flex + bison + codegen.c)--> program.ll
+#             program.ll + libbtrt.a --(clang)--> executable
+#
+# Environment: CLANG=clang-18 ./bytetapec ...   to pick a specific clang.
+
+DIR=$(cd "$(dirname "$0")" && pwd)
+CLANG=${CLANG:-clang}
+OPT=-O2
+ONLY_IR=0
+SRC=
+OUT=
+
+usage() {
+    echo "usage: $0 [-S] [-O0|-O1|-O2|-O3] program.bt [-o output]" >&2
+    exit 2
+}
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+        -S)            ONLY_IR=1 ;;
+        -O0|-O1|-O2|-O3) OPT=$1 ;;
+        -o)            shift; [ $# -gt 0 ] || usage; OUT=$1 ;;
+        -h|--help)     usage ;;
+        -*)            echo "$0: unknown option $1" >&2; usage ;;
+        *)             [ -z "$SRC" ] || usage; SRC=$1 ;;
+    esac
+    shift
+done
+[ -n "$SRC" ] || usage
+
+if [ -z "$OUT" ]; then
+    OUT=$(basename "$SRC" .bt)
+fi
+LL="$OUT.ll"
+[ "$ONLY_IR" = 1 ] && [ "${OUT%.ll}" != "$OUT" ] && LL=$OUT
+
+if [ ! -x "$DIR/bytetape" ] || [ ! -f "$DIR/libbtrt.a" ]; then
+    echo "$0: compiler not built -- run 'make' first" >&2
+    exit 2
+fi
+
+# 1. ByteTape -> LLVM IR  (exit code 3 = compile error in the .bt program)
+"$DIR/bytetape" --emit-ll "$LL" "$SRC" || exit $?
+[ "$ONLY_IR" = 1 ] && { echo "wrote $LL"; exit 0; }
+
+# 2. LLVM IR -> executable
+if ! command -v "$CLANG" >/dev/null 2>&1; then
+    echo "$0: '$CLANG' not found. Install it:  sudo apt install clang llvm" >&2
+    exit 2
+fi
+"$CLANG" -Wno-override-module "$OPT" "$LL" "$DIR/libbtrt.a" -o "$OUT" || exit 2
+echo "compiled $SRC -> $OUT  (LLVM IR kept in $LL)"
