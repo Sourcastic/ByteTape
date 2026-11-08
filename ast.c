@@ -1,8 +1,7 @@
 /*
- * ast.c -- node constructors and the state table. See ast.h.
+ * ast.c -- node constructors and the state table
  *
- * Source line numbers come from flex's `yylineno` (enabled in lexer.l with
- * `%option yylineno`). Because the parser sometimes reads one token ahead,
+ * Source line numbers come from flex's `yylineno` (enabled in lexer.l with `%option yylineno`). Because the parser sometimes reads one token ahead,
  * a line number can occasionally be off by one. That is fine for messages.
  */
 #include "ast.h"
@@ -11,7 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-extern int yylineno;      /* defined in the flex-generated lex.yy.c */
+extern int yylineno;      /* flex-generated lex.yy.c */
 
 State states[MAX_STATES];
 int   num_states  = 0;
@@ -28,7 +27,7 @@ static void *alloc_zeroed(size_t n)
     return p;
 }
 
-/* ---------- state table ---------- */
+/* state table */
 
 int state_intern(const char *name)
 {
@@ -76,7 +75,7 @@ int state_first_undefined(void)
     return -1;
 }
 
-/* ---------- operands ---------- */
+/* operands */
 
 Operand *operand_lit(int value)
 {
@@ -114,7 +113,7 @@ int operand_count(const Operand *list)
     return n;
 }
 
-/* ---------- conditions ---------- */
+/* conditions */
 
 static Cond *new_cond(CondKind kind)
 {
@@ -156,7 +155,7 @@ Cond *cond_not(Cond *x)
     return c;
 }
 
-/* ---------- on-table patterns and rows ---------- */
+/*  on-table patterns and rows */
 
 Pattern *pattern_value(int value)
 {
@@ -211,7 +210,7 @@ OnRow *onrow_append(OnRow *list, OnRow *row)
     return list;
 }
 
-/* ---------- statements ---------- */
+/* statements */
 
 static Stmt *new_stmt(StmtKind kind)
 {

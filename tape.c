@@ -1,5 +1,5 @@
 /*
- * tape.c -- implementation of the tape table. See tape.h for the interface.
+ * tape.c -- implementation of the tape table
  *
  * Representation of one tape:
  *
@@ -32,7 +32,7 @@ typedef struct {
 static Tape tapes[MAX_TAPES];
 static int  ntapes = 0;
 
-/* ---------- helpers ---------- */
+/* helpers */
 
 static void die(const char *msg)
 {
@@ -81,7 +81,7 @@ static void put(Tape *t, long pos, uint8_t value)
     t->cells[t->origin + pos] = value;
 }
 
-/* ---------- declaration ---------- */
+/*  declaration */
 
 int tape_find(const char *name)
 {
@@ -120,7 +120,7 @@ void tape_set_initial(int id, const uint8_t *vals, int n)
     t->head = 0;
 }
 
-/* ---------- operations ---------- */
+/*  operations */
 
 uint8_t tape_read(int id, long offset)
 {
@@ -145,7 +145,7 @@ void tape_move(int id, int dir)
     t->head += dir;
 }
 
-/* ---------- output ---------- */
+/* output */
 
 void tape_dump(FILE *out, const char *indent)
 {
@@ -182,7 +182,7 @@ void tape_dump(FILE *out, const char *indent)
     }
 }
 
-/* ---------- alphabet (see tape.h) ---------- */
+/*alphabet */
 
 #define SYM_GAMMA 1
 #define SYM_SIGMA 2

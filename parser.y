@@ -5,7 +5,7 @@
  * Program shape:
  *
  *      # comment
- *      %% alphabet                         (optional: declare the symbols)
+ *      %% alphabet                         (declare the symbols)
  *      input: {'a', 'b'}                  input symbols  (Sigma)
  *      tape:  {'X', 'Y'}                  extra work symbols; Gamma = Sigma + these + blank
  *
@@ -37,7 +37,7 @@ extern int yylineno;
 
 int parse_errors = 0;                 /* read by main.c */
 
-/* ---------- diagnostics ---------- */
+/* helper funcs (diagnostics) */
 
 static void vdiag(int line, const char *kind, const char *fmt, va_list ap)
 {
@@ -73,7 +73,7 @@ static void warning_at(int line, const char *fmt, ...)
     va_end(ap);
 }
 
-/* ---------- helpers used by the grammar actions ---------- */
+/*helpers used by the grammar actions*/
 
 /* Turn a tape name into its id; report an error if it was never declared. */
 static int lookup_tape(char *name)
@@ -296,7 +296,7 @@ alpha_decl
         }
     ;
 
-/* ---------- tapes ---------- */
+/*  tapes  */
 
 tape_decls
     : /* empty */
@@ -331,7 +331,7 @@ init_list
     | init_list ',' NUMBER      { init_push($3); }
     ;
 
-/* ---------- states ---------- */
+/*  states */
 
 state_defs
     : /* empty */
@@ -352,7 +352,7 @@ block
     : '{' stmt_list '}'         { $$ = $2; }
     ;
 
-/* ---------- statements ---------- */
+/*  statements */
 
 stmt
     : WRITE cell_ref operand    { $$ = stmt_write($2->tape, $2->offset, $3); free($2); }
@@ -381,7 +381,7 @@ if_stmt
     | IF cond block ELSE if_stmt        { $$ = stmt_if($2, $3, $5); }   /* else if */
     ;
 
-/* ---------- on: a rule table ---------- */
+/*  on: a rule table */
 
 on_stmt
     : ON cell_list '{' row_list '}'     { $$ = make_on($2, $4); }
@@ -411,7 +411,7 @@ pattern
     | '*'                               { $$ = pattern_any(); }
     ;
 
-/* ---------- operands and conditions ---------- */
+/*  operands and conditions */
 
 /* [Tape]  [Tape + n]  [Tape - n]  -- a cell relative to that tape's head */
 cell_ref

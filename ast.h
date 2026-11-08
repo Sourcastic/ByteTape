@@ -3,10 +3,9 @@
  *
  *      parser.y  BUILDS these nodes using the constructors below
  *      interp.c  WALKS these nodes and executes them
- *      (Phase 2) codegen.c will WALK the same nodes and emit LLVM IR
+ *      codegen.c WALK the same nodes and emit LLVM IR
  *
  * Tape names and state names are converted to integer ids at parse time.
- * Nothing in the AST contains a string except the state table.
  *
  * ByteTape has no expression language. The only things a statement can look at
  * are CELLS and LITERALS (an "operand"), and the only decisions are
@@ -17,9 +16,7 @@
 
 #define MAX_ON_CELLS 16     /* most cells one `on` statement may inspect */
 
-/* =====================  OPERANDS  =====================
- * An operand is either a literal 0-255 or a tape cell.
- * (`next` is only used to chain the cells listed after `on`.)
+/*   OPERANDS : An operand is either a literal 0-255 or a tape cell.
  */
 typedef enum { OPD_LIT, OPD_CELL } OperandKind;
 
@@ -31,8 +28,7 @@ typedef struct Operand {
     struct Operand *next;
 } Operand;
 
-/* =====================  CONDITIONS  =====================
- * Used by `if`. Evaluating a condition never changes a tape.
+/* CONDITIONS : Used by `if`. Evaluating a condition never changes a tape.
  */
 typedef enum { CMP_EQ, CMP_NE, CMP_LT, CMP_GT, CMP_LE, CMP_GE } CmpOp;
 typedef enum { COND_CMP, COND_AND, COND_OR, COND_NOT } CondKind;
@@ -45,7 +41,7 @@ typedef struct Cond {
     int          line;
 } Cond;
 
-/* =====================  ON RULE TABLES  =====================
+/*  ON RULE TABLES 
  *   on [A], [B] {  pat, pat -> { ... }   pat, pat -> { ... } }
  * One Pattern per scrutinee cell: a value, or "any" (written *).
  */
@@ -64,23 +60,22 @@ typedef struct OnRow {
     int              line;
 } OnRow;
 
-/* =====================  STATEMENTS  =====================
- * A block is a singly linked list of statements (via `next`).
+/*  STATEMENTS : A block is a singly linked list of statements (via `next`).
  */
 typedef enum {
-    STMT_WRITE,        /* write [Tape + n] operand        */
-    STMT_MOVE,         /* move Tape L|R                   */
+    STMT_WRITE,        
+    STMT_MOVE,         
     STMT_INC,          /* inc [Tape + n]   (255 wraps to 0) */
     STMT_DEC,          /* dec [Tape + n]   (0 wraps to 255) */
-    STMT_IF,           /* if cond { ... } else { ... }    */
+    STMT_IF,           
     STMT_ON,           /* on [A], [B] { pats -> { ... } ... } */
     STMT_TRANSITION,   /* transition StateName            */
-    STMT_HALT,         /* halt                            */
-    STMT_ACCEPT,       /* accept  (stop, verdict ACCEPT)  */
-    STMT_REJECT,       /* reject  (stop, verdict REJECT)  */
-    STMT_PRINT,        /* print  [Cell]  -> the byte as a character      */
-    STMT_PRINTN,       /* printn [Cell]  -> the value as a number + newline */
-    STMT_INPUT         /* input  [Cell]  -> read one byte from stdin     */
+    STMT_HALT,         
+    STMT_ACCEPT,       
+    STMT_REJECT,       
+    STMT_PRINT,       
+    STMT_PRINTN,       /* printn[Cell]  -> the value as a number + newline */
+    STMT_INPUT         
 } StmtKind;
 
 typedef struct Stmt {
@@ -105,10 +100,9 @@ typedef struct Stmt {
     int          line;            /* source line, for runtime errors      */
 } Stmt;
 
-/* =====================  STATE TABLE  =====================
- * `transition` may mention a state defined LATER in the file, so names get
- * an id the first time they are seen (state_intern). The body is filled in
- * when `state Name { ... }` is parsed (state_define).
+/* STATE TABLE 
+ * `transition` may mention a state defined LATER in the file, so names get an id the first time they are seen (state_intern).
+ * The body is filled in when `state Name { ... }` is parsed (state_define).
  */
 #define MAX_STATES 256
 
@@ -128,7 +122,7 @@ int  state_define(int id, Stmt *body);        /* 0 = ok, -1 = defined twice     
 int  state_mark_start(int id);                /* 0 = ok, -1 = a start state was already chosen */
 int  state_first_undefined(void);             /* id of a used-but-undefined state, or -1 */
 
-/* =====================  CONSTRUCTORS  =====================
+/*  CONSTRUCTORS 
  * Called from parser.y. Nodes are never freed: the program exits after running.
  */
 Operand *operand_lit   (int value);

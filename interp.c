@@ -1,13 +1,4 @@
-/*
- * interp.c -- executes the AST.
- *
- *   operand_value() / eval_cond()   read-only: look at cells and literals
- *   exec_block()                    runs a list of statements and reports how it ended:
- *                                     FLOW_NEXT        ran off the end of the list
- *                                     FLOW_TRANSITION  hit `transition X` (target in *next_state)
- *                                     FLOW_HALT / FLOW_ACCEPT / FLOW_REJECT
- *   run_program()                   the main loop: run a state, follow its transition, repeat
- */
+/* interp.c -- executes the AST. */
 #include "interp.h"
 
 #include <stdarg.h>
@@ -45,7 +36,7 @@ static void check_symbol(int line, int value)
     tape_symbol_name(value, name, sizeof name);
     runtime_error(line, "symbol %s is not in the tape alphabet", name);
 }
-/* ---------- operands and conditions ---------- */
+/*  operands and conditions : read-only: look at cells and literals */
 
 static int operand_value(const Operand *o)
 {
@@ -76,7 +67,7 @@ static int eval_cond(const Cond *c)
     return 0;
 }
 
-/* ---------- `on` support ---------- */
+/* `on` support */
 
 /* Writes e.g.  "[Bits]=1, [Rev + 1]=97"  describing the cells an `on` looked at. */
 static void describe_cells(char *buf, size_t n, const Operand *cells, const int *vals)
@@ -97,7 +88,11 @@ static void describe_cells(char *buf, size_t n, const Operand *cells, const int 
     }
 }
 
-/* ---------- statements ---------- */
+/* exec_block()       runs a list of statements and reports how it ended:
+ *                    FLOW_NEXT        ran off the end of the list
+ *                    FLOW_TRANSITION  hit `transition X` (target in *next_state)
+ *                    FLOW_HALT / FLOW_ACCEPT / FLOW_REJECT 
+ */
 
 static Flow exec_block(const Stmt *s, int *next_state)
 {
@@ -196,7 +191,7 @@ static Flow exec_block(const Stmt *s, int *next_state)
     return FLOW_NEXT;
 }
 
-/* ---------- main loop ---------- */
+/* main loop: run a state, follow its transition, repeat */
 
 int run_program(const RunOptions *opts)
 {

@@ -1,8 +1,8 @@
 /*
  * tape.h -- the ByteTape runtime: a table of named, two-way infinite tapes.
  *
- * Every tape is identified by a small integer id (0, 1, 2, ...) handed out
- * when the tape is declared. The parser turns tape names into ids once, so
+ * Every tape is identified by a small integer id (0, 1, 2, ...) handed out when the tape is declared.
+ * The parser turns tape names into ids once, so
  * the rest of the program (AST, interpreter) never compares strings.
  *
  * Each cell is one uint8_t (0-255), so values wrap on overflow.
@@ -13,9 +13,7 @@
  *     offset +1  ->  one cell to the right        ([Output + 1])
  *     offset -1  ->  one cell to the left         ([Output - 1])
  * Reading never moves the head.
- *
- * These are plain C functions with plain arguments on purpose: in Phase 2,
- * the generated LLVM IR will simply call them.
+
  */
 #ifndef TAPE_H
 #define TAPE_H
@@ -25,7 +23,7 @@
 
 #define MAX_TAPES 64
 
-/* ---- declaration (used by the parser) ---- */
+/*  declaration (used by the parser) */
 
 /* Create a new empty tape. Returns its id, or -1 if the name already exists. */
 int         tape_declare(const char *name);
@@ -39,13 +37,13 @@ int         tape_count(void);
 /* Fill cells 0..n-1 with vals[] and put the head on cell 0 (the first value). */
 void        tape_set_initial(int id, const uint8_t *vals, int n);
 
-/* ---- operations (used by the interpreter) ---- */
+/* operations (used by the interpreter) */
 
 uint8_t     tape_read (int id, long offset);
 void        tape_write(int id, long offset, uint8_t value);
 void        tape_move (int id, int dir);      /* dir: -1 = left, +1 = right */
 
-/* ---- alphabet (optional; declared in the %% alphabet section) ---- */
+/* alphabet*/
 
 void        tape_alphabet_enable(void);
 int         tape_alphabet_active(void);
