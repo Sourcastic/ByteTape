@@ -1,11 +1,8 @@
 /*
  * codegen.c -- ByteTape -> LLVM IR (Phase 2).
  *
- * Walks the same AST that interp.c executes (see ast.h) and prints a textual
- * LLVM module (.ll). Nothing is executed at compile time.
- *
- * Shape of the generated module
- * -----------------------------
+ * Walks the same AST that interp.c executes and prints a textual LLVM module (.ll). Nothing is executed at compile time.
+ * 
  *   define i32 @main(i32 %argc, ptr %argv) {
  *   entry:       declare the tapes, load their initial contents, br to the start state
  *   S_<name>:    one basic block (or several) for every ByteTape state
@@ -43,9 +40,7 @@
 
 FILE *codegen_out = NULL;
 
-/* ===================================================================
- *  Tape initial contents (recorded by the parser)
- * =================================================================== */
+/*Tape initial contents (recorded by the parser) */
 
 static uint8_t *g_init[MAX_TAPES];
 static int      g_init_n[MAX_TAPES];
@@ -65,11 +60,10 @@ void cg_tape_init(int id, const uint8_t *vals, int n)
     }
 }
 
-/* ===================================================================
- *  String constants
- *  Functions are printed while we walk the tree, but LLVM wants each string
+/* String constants
+ * /Functions are printed while we walk the tree, but LLVM wants each string
  *  as a global. We collect them here and print them after the function.
- * =================================================================== */
+ */
 
 static char **g_strs     = NULL;
 static int    g_nstrs    = 0;
@@ -106,9 +100,7 @@ static void print_c_string(FILE *out, const uint8_t *s, size_t n, int terminate)
     fputc('"', out);
 }
 
-/* ===================================================================
- *  Emission state
- * =================================================================== */
+/* Emission state */
 
 static FILE *out;
 static int   ntmp;            /* next %t number                                    */
@@ -153,9 +145,7 @@ static void br_named(const char *fmt, ...)
     terminated = 1;
 }
 
-/* ===================================================================
- *  Operands and conditions
- * =================================================================== */
+/* Operands and conditions */
 
 typedef struct { char s[32]; } Val;      /* an IR operand: "7" or "%t12" */
 
@@ -229,9 +219,7 @@ static Val cond(const Cond *c)
     return r;
 }
 
-/* ===================================================================
- *  Statements
- * =================================================================== */
+/*Statements */
 
 static void block(const Stmt *s);
 
@@ -318,7 +306,7 @@ static void emit_on(const Stmt *s)
     int l_nomatch = new_lbl();
     int l_end     = new_lbl();
 
-    /* ---- the chain of tests ---- */
+    /* the chain of tests */
     int k = 0;
     for (const OnRow *r = s->rows; r; r = r->next, k++) {
         open_block();                       /* previous row ended with a jump */
@@ -352,7 +340,7 @@ static void emit_on(const Stmt *s)
         }
     }
 
-    /* ---- no row matched ---- */
+    /* when no row matched */
     if (!terminated)                        /* (an `on` always has a row, but stay valid) */
         br(l_nomatch);
     label(l_nomatch);
@@ -369,7 +357,7 @@ static void emit_on(const Stmt *s)
         terminated = 1;
     }
 
-    /* ---- the row bodies ---- */
+    /*row bodies */
     k = 0;
     for (const OnRow *r = s->rows; r; r = r->next, k++) {
         label(row_lbl[k]);
@@ -436,9 +424,7 @@ static void block(const Stmt *s)
         stmt(s);
 }
 
-/* ===================================================================
- *  The whole module
- * =================================================================== */
+/*The whole module */
 
 static void emit_prologue(void)
 {
@@ -516,7 +502,7 @@ static void emit_main(void)
 
 static void emit_constants(void)
 {
-    fputs("\n; --- constants ---\n", out);
+    fputs("\n; constants \n", out);
 
     for (int i = 0; i < tape_count(); i++) {
         if (g_init_n[i] > 0) {

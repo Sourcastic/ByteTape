@@ -2,7 +2,7 @@ CC     = gcc
 CFLAGS = -std=gnu17 -Wall -Wextra -g
 TARGET = bytetape
 
-# The compiler / interpreter itself (Phase 1 + Phase 2 code generator)
+# The compiler / interpreter itself
 SRCS   = parser.tab.c lex.yy.c ast.c interp.c codegen.c tape.c main.c
 HDRS   = ast.h interp.h codegen.h tape.h
 
@@ -23,7 +23,7 @@ parser.tab.c parser.tab.h: parser.y
 lex.yy.c: lexer.l parser.tab.h
 	flex lexer.l
 
-# --- runtime library for compiled programs: tape.c + rt.c ---
+# runtime library for compiled programs: tape.c + rt.c
 # rt_tape.o: tape.c tape.h
 # 	$(CC) $(CFLAGS) -c tape.c -o $@
 

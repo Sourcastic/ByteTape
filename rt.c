@@ -1,11 +1,11 @@
 /*
- * rt.c -- ByteTape runtime for COMPILED programs (Phase 2).
+ * rt.c -- ByteTape runtime for COMPILED programs.
  *
  * The LLVM IR produced by codegen.c calls these functions. Together with
- * tape.c (the tape table from Phase 1) they are built into libbtrt.a, which
+ * tape.c they are built into libbtrt.a, which
  * the driver script `bytetapec` links into every generated executable.
  *
- * Every function here uses plain `int` / `long` / `const char *` arguments so
+ * Every function  uses plain `int` / `long` / `const char *` arguments so
  * the generated IR never has to worry about C ABI details for 8-bit values.
  * Values are truncated to 8 bits (0-255) when stored in a tape cell.
  *
@@ -28,7 +28,7 @@
 
 static int g_dump_tapes = 1;       /* print the final tapes when the program stops */
 
-/* ---------- start-up ---------- */
+/* start-up */
 
 /* Called first thing in the generated main(). Accepts: -q */
 void rt_init(int argc, char **argv)
@@ -44,7 +44,7 @@ void rt_init(int argc, char **argv)
         }
     }
 }
-/* ---------- alphabet (only present when the program has a `%% alphabet` section) ---------- */
+/*alphabet (for tape symbols) */
 
 /* Called once from the generated main(): the tape alphabet Gamma, as a list of symbols. */
 void rt_alphabet(const uint8_t *symbols, int n)
@@ -71,7 +71,7 @@ void rt_check_symbol(int line, int value)
 
     exit(RT_EXIT_RUNTIME);
 }
-/* ---------- tape access (thin wrappers around tape.c) ---------- */
+/* tape access (thin wrappers around tape.c) */
 
 int rt_read(int tape, long offset)
 {
@@ -88,7 +88,7 @@ void rt_move(int tape, int dir)
     tape_move(tape, dir);
 }
 
-/* ---------- input / output ---------- */
+/* input / output */
 
 void rt_print(int value)               /* print [Cell]  : the byte as a character */
 {
@@ -106,7 +106,7 @@ int rt_input(void)                     /* input [Cell]  : one byte, 0 at end of 
     return c == EOF ? 0 : c;
 }
 
-/* ---------- runtime errors ---------- */
+/* runtime errors */
 
 static void runtime_error_begin(int line)
 {
@@ -142,7 +142,7 @@ void rt_state_end(int line, const char *state)
     exit(RT_EXIT_RUNTIME);
 }
 
-/* ---------- stopping ---------- */
+/*stopping */
 
 /* verdict: 0 = halt, 1 = accept, 2 = reject. Returns main()'s exit code. */
 int rt_finish(int verdict)

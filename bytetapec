@@ -1,15 +1,11 @@
 #!/bin/sh
-# bytetapec -- the ByteTape ahead-of-time compiler driver (Phase 2).
+# bytetapec -- the ByteTape ahead-of-time compiler driver
 #
 #   ./bytetapec program.bt              ->  ./program      (and program.ll)
 #   ./bytetapec program.bt -o name      ->  ./name         (and name.ll)
 #   ./bytetapec -S program.bt           ->  program.ll only (stop after LLVM IR)
 #   ./bytetapec -O0 program.bt          ->  no optimisation (default is -O2)
-#
-# Pipeline:   program.bt --(bytetape --emit-ll: flex + bison + codegen.c)--> program.ll
-#             program.ll + libbtrt.a --(clang)--> executable
-#
-# Environment: CLANG=clang-18 ./bytetapec ...   to pick a specific clang.
+
 
 DIR=$(cd "$(dirname "$0")" && pwd)
 CLANG=${CLANG:-clang}
