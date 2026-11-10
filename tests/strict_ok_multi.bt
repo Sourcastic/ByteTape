@@ -1,0 +1,26 @@
+# Passes --strict: two tapes, stay moves, omitted writes, overlapping rows, and a table
+# that is complete without a catch-all row (state T covers all 9 combinations of Gamma x Gamma).
+%% alphabet
+input: {'a'}
+tape:  {'x'}
+%% tapes
+A: {'a'}
+B: {}
+%% states
+state S {
+    on [A], [B] {
+        'a', _   -> { write [B] 'x'  move A R  transition S }
+        _,   'x' -> { transition T }
+        *,   *   -> { reject }
+    }
+}
+
+state T {
+    on [A], [B] {
+        'a', * -> { reject }
+        'x', * -> { reject }
+        _, 'a' -> { reject }
+        _, 'x' -> { accept }
+        _, _   -> { reject }
+    }
+}

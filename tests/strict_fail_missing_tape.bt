@@ -1,0 +1,8 @@
+# --strict error: with two tapes, every 'on' must read both of them.
+%% alphabet
+input: {'a'}
+%% tapes
+A: {'a'}
+B: {}
+%% states
+state S { on [A] { 'a' -> { accept }  * -> { reject } } }

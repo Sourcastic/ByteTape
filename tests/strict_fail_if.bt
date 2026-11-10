@@ -1,0 +1,7 @@
+# --strict error: a state must be a single 'on' table, not an 'if'.
+%% alphabet
+input: {'a'}
+%% tapes
+T: {'a'}
+%% states
+state S { if [T] == 'a' { accept } reject }

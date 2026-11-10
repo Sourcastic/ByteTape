@@ -31,6 +31,7 @@ for f in examples/*.bt tests/*.bt; do
     case $f in
         examples/forever.bt) continue ;;                # never halts
         tests/fail_*.bt) continue ;;                    # must NOT compile: checked below
+        tests/strict_fail_*.bt) continue ;;             # valid programs, but must fail --strict: checked below
         tests/alpha_input.bt) run_one "$f" "abz" ;;     # 'z' is outside the alphabet
         examples/cat.bt|tests/input.bt) run_one "$f" "Hello, tapes!
 second line
@@ -47,6 +48,33 @@ for f in tests/fail_*.bt; do
         echo "ok    $f   (compile error, exit 3)"; pass=$((pass+1))
     else
         echo "FAIL  $f   interpreter exit=$ri  compiler exit=$rc  (both should be 3)"; fail=$((fail+1))
+    fi
+done
+
+# --strict: programs that are valid ByteTape but not formal Turing machines. Both tools must
+# reject them with exit code 3 and leave no .ll behind; WITHOUT --strict they must not be a compile error.
+for f in tests/strict_fail_*.bt; do
+    rm -f tests/out/failed.ll
+    ./bytetape --strict -q "$f" >/dev/null 2>&1; ri=$?
+    ./bytetapec --strict "$f" -o tests/out/failed >/dev/null 2>&1; rc=$?
+    ./bytetape -q "$f" >/dev/null 2>&1; rn=$?
+    if [ $ri -eq 3 ] && [ $rc -eq 3 ] && [ $rn -ne 3 ] && [ ! -e tests/out/failed.ll ]; then
+        echo "ok    $f   (--strict: exit 3)"; pass=$((pass+1))
+    else
+        echo "FAIL  $f   strict interpreter=$ri  strict compiler=$rc  without --strict=$rn"; fail=$((fail+1))
+    fi
+done
+
+# --strict: formal Turing machines must be accepted, and --strict must not change what they do.
+for f in examples/anbn.bt examples/increment.bt examples/palindrome.bt tests/strict_ok_*.bt; do
+    name=$(basename "$f" .bt)
+    ./bytetape -q "$f"          >tests/out/$name.plain.out 2>&1; rp=$?
+    ./bytetape --strict -q "$f" >tests/out/$name.strict.out 2>&1; rs=$?
+    ./bytetapec --strict -S "$f" -o tests/out/strict_$name >/dev/null 2>&1; rc=$?
+    if [ $rs -ne 3 ] && [ $rs -eq $rp ] && [ $rc -eq 0 ] && cmp -s tests/out/$name.plain.out tests/out/$name.strict.out; then
+        echo "ok    $f   (passes --strict)"; pass=$((pass+1))
+    else
+        echo "FAIL  $f   plain exit=$rp  strict exit=$rs  strict compile=$rc"; cat tests/out/$name.strict.out; fail=$((fail+1))
     fi
 done
 

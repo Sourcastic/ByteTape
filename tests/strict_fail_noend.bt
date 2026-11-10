@@ -1,0 +1,12 @@
+# --strict error: every row must end with transition, accept, reject or halt.
+%% alphabet
+input: {'a'}
+%% tapes
+T: {'a'}
+%% states
+state S {
+    on [T] {
+        'a' -> { move T R }
+        *   -> { reject }
+    }
+}

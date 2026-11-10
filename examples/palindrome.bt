@@ -1,37 +1,42 @@
-# Decides whether a word over {a, b} is a palindrome. The word ends with '$'.
-# Change the letters below to test other words.  Prints ACCEPT or REJECT.
+# Decides whether a word over {a, b} is a palindrome. Prints ACCEPT or REJECT.
+# Change the letters on the Input tape to test other words.
+#
+# A two-tape Turing machine: every state is one rule table over BOTH tapes, so it passes --strict.
+#
+#   Copy     copy the word onto Rev (both heads move right)
+#   Rewind   move the Input head back to the first letter; Rev stays on the last letter
+#   Compare  read Input forwards and Rev backwards; every pair must match
+
+%% alphabet
+input: {'a', 'b'}
 
 %% tapes
-Input: {'a', 'b', 'b', 'a', '$'}
+Input: {'a', 'b', 'b', 'a'}
 Rev:   {}
 
 %% states
-# Copy Input onto Rev backwards: Rev is written right-to-left.
 state Copy {
-    on [Input] {
-        '$' -> { move Rev R            # Rev now reads left-to-right as the reversed word
-                 transition Rewind }
-        *   -> { write [Rev] [Input]
-                 move Rev L
-                 move Input R
-                 transition Copy }
+    on [Input], [Rev] {
+        'a', _ -> { write [Rev] 'a'  move Input R  move Rev R  transition Copy }
+        'b', _ -> { write [Rev] 'b'  move Input R  move Rev R  transition Copy }
+        _,   _ -> { move Input L  move Rev L  transition Rewind }   # end of the word
+        *,   * -> { reject }
     }
 }
 
-# Walk Input back to the blank cell left of the word, then step onto the first letter.
 state Rewind {
-    on [Input] {
-        _ -> { move Input R  transition Compare }
-        * -> { move Input L  transition Rewind }
+    on [Input], [Rev] {
+        'a', * -> { move Input L  transition Rewind }
+        'b', * -> { move Input L  transition Rewind }
+        _,   * -> { move Input R  transition Compare }              # blank left of the word
     }
 }
 
-# A true two-tape rule table: one row per pair of symbols under the heads.
 state Compare {
     on [Input], [Rev] {
-        '$', *   -> { accept }
-        'a', 'a' -> { move Input R  move Rev R  transition Compare }
-        'b', 'b' -> { move Input R  move Rev R  transition Compare }
+        'a', 'a' -> { move Input R  move Rev L  transition Compare }
+        'b', 'b' -> { move Input R  move Rev L  transition Compare }
+        _,   _   -> { accept }                                      # both tapes used up together
         *,   *   -> { reject }
     }
 }

@@ -1,0 +1,5 @@
+# --strict error: no '%% alphabet' section.
+%% tapes
+T: {1}
+%% states
+state S { on [T] { 1 -> { accept }  * -> { reject } } }

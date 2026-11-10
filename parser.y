@@ -30,6 +30,7 @@
 #include "tape.h"
 #include "codegen.h"
 #include "interp.h"
+#include "strict.h"
 
 int  yylex(void);
 void yyerror(const char *msg);
@@ -256,6 +257,12 @@ static Stmt *make_on(Operand *cells, OnRow *rows)
 program
     : header SEC_TAPES tape_decls SEC_STATES state_defs
         {
+            /* --strict: the program must be a formal Turing machine (see strict.c).
+             * This runs before any IR is written, so a rejected program leaves no output. */
+            if (strict_mode && parse_errors == 0
+                && start_state >= 0 && state_first_undefined() < 0)
+                parse_errors += strict_check();
+
             /* Phase 2: the whole program has been parsed. If we are in compiler mode
              * (main.c set codegen_out) and the program is free of errors, emit LLVM IR. */
             if (codegen_out && parse_errors == 0

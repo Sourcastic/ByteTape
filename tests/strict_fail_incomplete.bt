@@ -1,0 +1,15 @@
+# --strict error: the table must cover every symbol combination.
+# Gamma = {a, b, blank}: with two tapes there are 9 combinations; ('b', _) and more are missing.
+%% alphabet
+input: {'a', 'b'}
+%% tapes
+A: {'a'}
+B: {}
+%% states
+state S {
+    on [A], [B] {
+        'a', _ -> { accept }
+        'a', * -> { reject }
+        _,   * -> { reject }
+    }
+}

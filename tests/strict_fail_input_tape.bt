@@ -1,0 +1,8 @@
+# --strict error: only the first tape holds the input; the others must start blank.
+%% alphabet
+input: {'a'}
+%% tapes
+A: {'a'}
+B: {'a'}
+%% states
+state S { on [A], [B] { *, * -> { accept } } }

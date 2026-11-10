@@ -1,0 +1,12 @@
+# --strict error: a row may only write a symbol literal, not copy another cell.
+%% alphabet
+input: {'a'}
+%% tapes
+A: {'a'}
+B: {}
+%% states
+state S {
+    on [A], [B] {
+        *, * -> { write [B] [A]  accept }
+    }
+}

@@ -1,7 +1,7 @@
 /*
  * main.c -- command line entry point.
  *
- *   ./bytetape [-q] [--trace] [--max-steps N] program.bt
+ *   ./bytetape [-q] [--trace] [--max-steps N] [--strict] program.bt
  *
  * Steps: parse the file (building the AST), check the program, run it.
  */
@@ -12,6 +12,7 @@
 #include "ast.h"
 #include "codegen.h"
 #include "interp.h"
+#include "strict.h"
 
 extern FILE *yyin;
 int  yyparse(void);
@@ -24,6 +25,7 @@ static void usage(const char *prog)
             "  -q               quiet: do not print the final tapes when the program stops\n"
             "  --trace          print the state and every tape before each step\n"
             "  --max-steps N    stop with an error after N steps (catches endless loops)\n"
+            "  --strict         accept only formal Turing machines (one 'on' table per state)\n"
             "  --emit-ll FILE   do not run: compile to LLVM IR and write it to FILE ('-' = stdout)\n"
             "  -h, --help       show this message\n"
             "\n"
@@ -42,6 +44,8 @@ int main(int argc, char **argv)
             opts.dump_tapes = 0;
         } else if (strcmp(argv[i], "--trace") == 0) {
             opts.trace = 1;
+        } else if (strcmp(argv[i], "--strict") == 0) {
+            strict_mode = 1;
         } else if (strcmp(argv[i], "--max-steps") == 0) {
             char *end;
             if (++i >= argc) { usage(argv[0]); return EXIT_USAGE; }

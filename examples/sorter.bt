@@ -1,39 +1,155 @@
-# Sorts every pair of neighbouring values from Input into Output.
-# (The example from the project proposal.)
+# Natural merge sort on tapes.
+#
+# Values must be 1..254. A blank cell ends the list. (0 is blank, and 255 marks the end of a run.)
+#
+# Tapes
+#   Input    the numbers to sort (never changed)
+#   Output   a copy of Input that ends up sorted: the result
+#   A, B     scratch tapes. Each pass deals the runs of Output out onto A and B
+#   Phase    1 = next comes "distribute", 0 = next comes "merge"
+#
+# A "run" is a stretch of Output that is already in order. Each pass does two things:
+#   distribute  deal the runs alternately onto A and B, each run closed by a 255
+#   merge       merge the first run of A with the first run of B, then the second with the
+#               second, and so on, writing back to Output
+# Every merge pass at least halves the number of runs. When Output is a single run it is sorted.
 
 %% tapes
-Input:        {3, 2, 4, 5, 1, '$'}
-Calculations: {}
-Output:       {}
+Input:  {5, 2, 9, 1, 7, 3, 8, 4, 6}
+Output: {}
+A:      {}
+B:      {}
+Phase:  {1}
 
 %% states
-state ReadFirstByte {
+state Start {
     on [Input] {
-        '$' -> { write [Output] '$'  halt }
-        *   -> { write [Output] [Input]
-                 move Input R
-                 move Output R
-                 transition ReadSecondByte }
+        _ -> { halt }                               # empty list: nothing to sort
+        * -> { transition CopyIn }
     }
 }
 
-state ReadSecondByte {
+# Output := Input
+state CopyIn {
     on [Input] {
-        '$' -> { write [Output] '$'  halt }
-        *   -> { write [Output] [Input]
-                 move Input R
-                 move Output L
-                 transition CompareAndSort }
+        _ -> { transition Rewind }
+        * -> { write [Output] [Input]
+               move Input R
+               move Output R
+               transition CopyIn }
     }
 }
 
-state CompareAndSort {
-    if [Output] > [Output + 1] {
-        write [Calculations] [Output]
-        write [Output] [Output + 1]
-        write [Output + 1] [Calculations]
+# Put the heads of Output, A and B back on their first cell, then see what comes next.
+state Rewind {
+    move A L
+    move B L
+    move Output L
+    transition RewindA
+}
+
+state RewindA {
+    on [A] {
+        _ -> { move A R  transition RewindB }
+        * -> { move A L  transition RewindA }
     }
-    move Output R
-    move Output R
-    transition ReadFirstByte
+}
+
+state RewindB {
+    on [B] {
+        _ -> { move B R  transition RewindOut }
+        * -> { move B L  transition RewindB }
+    }
+}
+
+state RewindOut {
+    on [Output] {
+        _ -> { move Output R  transition Dispatch }
+        * -> { move Output L  transition RewindOut }
+    }
+}
+
+# After copying or merging: distribute. After distributing: merge (unless already sorted).
+state Dispatch {
+    on [Phase] {
+        0 -> { write [Phase] 1  transition CheckSorted }
+        * -> { write [Phase] 0  transition DistA }
+    }
+}
+
+# B starts with a 255 only if everything went onto A as a single run: Output is sorted.
+state CheckSorted {
+    on [B] {
+        255 -> { halt }
+        *   -> { transition Merge }
+    }
+}
+
+# Distribute: copy one value of Output to A, and look at the next one.
+# If the next value is smaller, the run ends: close it with 255 and switch to B.
+state DistA {
+    write [A] [Output]
+    move A R
+    on [Output + 1] {
+        _ -> {                                      # that was the last value
+            write [A] 255  move A R                 # close A's run
+            write [B] 255  move B R                 # B gets an empty run, so A and B stay paired
+            write [A] _
+            write [B] _                             # end of tape
+            transition Rewind
+        }
+        * -> {
+            if [Output] > [Output + 1] {
+                write [A] 255  move A R
+                move Output R
+                transition DistB
+            } else {
+                move Output R
+                transition DistA
+            }
+        }
+    }
+}
+
+state DistB {
+    write [B] [Output]
+    move B R
+    on [Output + 1] {
+        _ -> {
+            write [B] 255  move B R
+            write [A] _
+            write [B] _
+            transition Rewind
+        }
+        * -> {
+            if [Output] > [Output + 1] {
+                write [B] 255  move B R
+                move Output R
+                transition DistA
+            } else {
+                move Output R
+                transition DistB
+            }
+        }
+    }
+}
+
+# Merge: take the smaller of the two heads. A 255 is bigger than any value, so a finished
+# run loses every comparison until both runs are finished.
+state Merge {
+    on [A], [B] {
+        _,   _   -> { transition Rewind }                       # both tapes used up: pass done
+        255, 255 -> { move A R  move B R  transition Merge }    # both runs done: next pair
+        *,   *   -> {
+            if [A] <= [B] {
+                write [Output] [A]
+                move A R
+            } else {
+                write [Output] [B]
+                move B R
+            }
+            move Output R
+            transition Merge
+        }
+    }
 }

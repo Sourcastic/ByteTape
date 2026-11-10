@@ -1,0 +1,13 @@
+# --strict error: inc, dec, print, printn and input are not part of a Turing machine.
+%% alphabet
+input: {'a'}
+tape:  {'b'}
+%% tapes
+T: {'a'}
+%% states
+state S {
+    on [T] {
+        'a' -> { inc [T]  print [T]  accept }
+        *   -> { reject }
+    }
+}

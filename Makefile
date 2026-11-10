@@ -3,8 +3,8 @@ CFLAGS = -std=gnu17 -Wall -Wextra -g
 TARGET = bytetape
 
 # The compiler / interpreter itself
-SRCS   = parser.tab.c lex.yy.c ast.c interp.c codegen.c tape.c main.c
-HDRS   = ast.h interp.h codegen.h tape.h
+SRCS   = parser.tab.c lex.yy.c ast.c interp.c codegen.c strict.c tape.c main.c
+HDRS   = ast.h interp.h codegen.h strict.h tape.h
 
 # The runtime that every compiled ByteTape program links against
 RTLIB  = libbtrt.a

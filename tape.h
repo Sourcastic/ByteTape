@@ -34,6 +34,9 @@ int         tape_find(const char *name);
 const char *tape_name(int id);
 int         tape_count(void);
 
+/* 1 if every cell of the tape is blank (0). Used by --strict to check initial tapes. */
+int         tape_is_blank(int id);
+
 /* Fill cells 0..n-1 with vals[] and put the head on cell 0 (the first value). */
 void        tape_set_initial(int id, const uint8_t *vals, int n);
 

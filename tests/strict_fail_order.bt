@@ -1,0 +1,12 @@
+# --strict error: writes must come before moves.
+%% alphabet
+input: {'a'}
+%% tapes
+T: {'a'}
+%% states
+state S {
+    on [T] {
+        'a' -> { move T R  write [T] 'a'  accept }
+        *   -> { reject }
+    }
+}

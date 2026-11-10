@@ -112,6 +112,15 @@ int tape_declare(const char *name)
 const char *tape_name(int id) { return get(id)->name; }
 int         tape_count(void)  { return ntapes; }
 
+int tape_is_blank(int id)
+{
+    Tape *t = get(id);
+    for (long k = 0; k < t->cap; k++)
+        if (t->cells[k])
+            return 0;
+    return 1;
+}
+
 void tape_set_initial(int id, const uint8_t *vals, int n)
 {
     Tape *t = get(id);
